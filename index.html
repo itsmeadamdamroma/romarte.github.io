@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S. — AI Command Center | Binario F 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(15, 15, 25, 0.7);
+    --surface-hover: rgba(20, 20, 35, 0.85);
+    --border: rgba(255, 255, 255, 0.06);
+    --text: #e4e4e7;
+    --text-dim: #71717a;
+    --green: #22c55e;
+    --green-glow: rgba(34, 197, 94, 0.25);
+    --teal: #14b8a6;
+    --teal-glow: rgba(20, 184, 166, 0.3);
+    --amber: #f59e0b;
+    --amber-glow: rgba(245, 158, 11, 0.25);
+    --blue: #3b82f6;
+    --blue-glow: rgba(59, 130, 246, 0.25);
+    --purple: #a855f7;
+    --purple-glow: rgba(168, 85, 247, 0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* BACKGROUND EFFECTS */
+  .bg-grid {
+    position: fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.5;
+  }
+  .bg-orb {
+    position: fixed; border-radius:50%; filter:blur(120px); z-index:0; pointer-events:none;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+  .bg-orb.green { width:600px; height:600px; background:rgba(34,197,94,0.08); top:-200px; right:-100px; animation-delay:0s; }
+  .bg-orb.teal  { width:500px; height:500px; background:rgba(20,184,166,0.06); bottom:-150px; left:-150px; animation-delay:-4s; }
+  .bg-orb.blue  { width:400px; height:400px; background:rgba(59,130,246,0.05); top:40%; left:60%; animation-delay:-6s; }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    25% { transform: translate(30px, -40px) scale(1.05); }
+    50% { transform: translate(-20px, 20px) scale(0.95); }
+    75% { transform: translate(40px, 10px) scale(1.02); }
+  }
+
+  /* CONTAINER */
+  .container { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:40px 24px; }
+
+  /* HERO */
+  .hero { text-align:center; padding:80px 0 60px; }
+  .hero-badge {
+    display:inline-block; padding:6px 18px; border-radius:999px;
+    font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+    border:1px solid rgba(34,197,94,0.3);
+    background:rgba(34,197,94,0.08);
+    color:var(--green);
+    margin-bottom:28px;
+    animation: fadeInUp 0.8s ease-out;
+  }
+  .hero h1 {
+    font-size:clamp(40px, 7vw, 80px); font-weight:900; line-height:1.05;
+    letter-spacing:-1.5px; margin-bottom:16px;
+    animation: fadeInUp 0.8s ease-out 0.15s both;
+  }
+  .hero h1 .glow { color:var(--green); text-shadow:0 0 60px var(--green-glow); }
+  .hero-sub {
+    font-size:clamp(16px, 2.5vw, 20px); color:var(--text-dim);
+    max-width:600px; margin:0 auto 36px;
+    line-height:1.5;
+    animation: fadeInUp 0.8s ease-out 0.3s both;
+  }
+  .hero-actions {
+    display:flex; gap:14px; justify-content:center; flex-wrap:wrap;
+    animation: fadeInUp 0.8s ease-out 0.45s both;
+  }
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:14px 28px; border-radius:12px;
+    font-size:15px; font-weight:600; text-decoration:none;
+    border:1px solid transparent;
+    cursor:pointer; transition:all 0.25s ease;
+    position:relative; overflow:hidden;
+  }
+  .btn-primary {
+    background:var(--green); color:#000;
+    box-shadow:0 4px 24px var(--green-glow);
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 40px var(--green-glow); }
+  .btn-outline {
+    border-color:rgba(255,255,255,0.15); color:var(--text);
+    background:rgba(255,255,255,0.04);
+  }
+  .btn-outline:hover { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.25); }
+
+  /* STATS */
+  .stats {
+    display:flex; gap:40px; justify-content:center; flex-wrap:wrap;
+    padding:48px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    animation: fadeInUp 0.8s ease-out 0.6s both;
+  }
+  .stat { text-align:center; }
+  .stat-value { font-size:32px; font-weight:800; font-family:'JetBrains Mono', monospace; }
+  .stat-value.green { color:var(--green); }
+  .stat-value.teal { color:var(--teal); }
+  .stat-value.amber { color:var(--amber); }
+  .stat-label { font-size:13px; color:var(--text-dim); margin-top:4px; }
+
+  /* AGENTS GRID */
+  .section-title {
+    font-size:30px; font-weight:800; text-align:center;
+    margin:80px 0 48px; letter-spacing:-0.5px;
+  }
+  .agents { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:20px; }
+  .agent-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:32px 28px;
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+    position:relative;
+    animation: fadeInUp 0.6s ease-out both;
+  }
+  .agent-card:nth-child(1) { animation-delay:0.1s; }
+  .agent-card:nth-child(2) { animation-delay:0.2s; }
+  .agent-card:nth-child(3) { animation-delay:0.3s; }
+  .agent-card:nth-child(4) { animation-delay:0.4s; }
+  .agent-card:hover {
+    transform:translateY(-6px); border-color:var(--border);
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .agent-card:hover .agent-glow { opacity:1; }
+  .agent-glow {
+    position:absolute; inset:-1px; border-radius:21px; z-index:-1;
+    opacity:0; transition:opacity 0.35s ease; pointer-events:none;
+  }
+  .agent-glow.green { box-shadow:0 0 40px var(--green-glow); }
+  .agent-glow.teal { box-shadow:0 0 40px var(--teal-glow); }
+  .agent-glow.amber { box-shadow:0 0 40px var(--amber-glow); }
+  .agent-glow.purple { box-shadow:0 0 40px var(--purple-glow); }
+  .agent-icon {
+    width:48px; height:48px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; margin-bottom:20px;
+  }
+  .agent-icon.green { background:rgba(34,197,94,0.12); color:var(--green); }
+  .agent-icon.teal { background:rgba(20,184,166,0.12); color:var(--teal); }
+  .agent-icon.amber { background:rgba(245,158,11,0.12); color:var(--amber); }
+  .agent-icon.purple { background:rgba(168,85,247,0.12); color:var(--purple); }
+  .agent-name { font-size:20px; font-weight:700; margin-bottom:8px; }
+  .agent-role { font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px; }
+  .agent-role.green { color:var(--green); }
+  .agent-role.teal { color:var(--teal); }
+  .agent-role.amber { color:var(--amber); }
+  .agent-role.purple { color:var(--purple); }
+  .agent-desc { font-size:14px; color:var(--text-dim); line-height:1.6; }
+  .agent-metric { 
+    margin-top:20px; padding-top:16px; border-top:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px;
+  }
+  .agent-metric-label { color:var(--text-dim); }
+  .agent-metric-value { font-family:'JetBrains Mono', monospace; font-weight:600; }
+
+  /* JARVIS LINK */
+  .demo-section {
+    text-align:center; margin:80px 0 60px; padding:60px 40px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; backdrop-filter:blur(20px);
+    animation: fadeInUp 0.8s ease-out 0.7s both;
+  }
+  .demo-section h3 { font-size:24px; font-weight:700; margin-bottom:12px; }
+  .demo-section p { color:var(--text-dim); margin-bottom:24px; }
+  .demo-url {
+    display:inline-block; padding:12px 24px;
+    background:rgba(0,0,0,0.4); border:1px solid var(--border);
+    border-radius:12px; font-family:'JetBrains Mono', monospace;
+    font-size:14px; color:var(--green);
+    word-break:break-all; max-width:100%; margin-bottom:20px;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align:center; padding:40px 0;
+    border-top:1px solid var(--border);
+    color:var(--text-dim); font-size:13px;
+  }
+  .footer .pulse {
+    display:inline-block; width:8px; height:8px;
+    background:var(--green); border-radius:50%;
+    margin-right:6px; animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity:1; box-shadow:0 0 0 0 var(--green-glow); }
+    50% { opacity:0.6; box-shadow:0 0 0 12px transparent; }
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(24px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width:640px) {
+    .hero { padding:40px 0 30px; }
+    .stats { gap:24px; }
+    .stat-value { font-size:24px; }
+    .btn { padding:12px 20px; font-size:14px; }
+  }
+
+  @media (prefers-reduced-motion) {
+    .bg-orb, .agent-card { animation:none; }
+    .hero h1, .hero-sub, .hero-actions, .stats, .demo-section { animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-orb green"></div>
+<div class="bg-orb teal"></div>
+<div class="bg-orb blue"></div>
+
+<div class="container">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">Binario F · Roma · 25 Maggio 2026</div>
+    <h1>J.A.R.V.I.S.<br><span class="glow">AI Command Center</span></h1>
+    <p class="hero-sub">
+      Un ecosistema di 158 agenti AI autonomi: orchestrazione, sicurezza, sviluppo e intelligence. 
+      Tutto orchestrato da un'interfaccia unificata.
+    </p>
+    <div class="hero-actions">
+      <a href="https://patients-mills-source-original.trycloudflare.com/?v=6" target="_blank" rel="noopener" class="btn btn-primary">
+        🚀 Accedi a JARVIS
+      </a>
+      <a href="#agents" class="btn btn-outline">
+        Scopri gli agenti
+      </a>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value green">158</div>
+      <div class="stat-label">Agenti attivi</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value teal">55+</div>
+      <div class="stat-label">Skill AI</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value amber">10</div>
+      <div class="stat-label">Container Docker</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:#22c55e">24/7</div>
+      <div class="stat-label">Operatività</div>
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <h2 id="agents" class="section-title">L'Ecosistema</h2>
+  <div class="agents">
+    <div class="agent-card">
+      <div class="agent-glow green"></div>
+      <div class="agent-icon green">⚡</div>
+      <div class="agent-name">J.A.R.V.I.S.</div>
+      <div class="agent-role green">AI Butler & Command Center</div>
+      <div class="agent-desc">
+        Interfaccia intelligente con dashboard real-time, chat, intelligence deck e voice control. 
+        Coordina l'intero ecosistema agentico.
+      </div>
+      <div class="agent-metric">
+        <span class="agent-metric-label">Container Docker</span>
+        <span class="agent-metric-value" style="color:var(--green)">10 attivi</span>
+      </div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-glow teal"></div>
+      <div class="agent-icon teal">💼</div>
+      <div class="agent-name">CashClaw</div>
+      <div class="agent-role teal">CEO & Business Orchestrator</div>
+      <div class="agent-desc">
+        Gestione strategica, Twitter/X posting, analisi di mercato, business intelligence. 
+        L'agente CEO che orchestra le operazioni business.
+      </div>
+      <div class="agent-metric">
+        <span class="agent-metric-label">Post social</span>
+        <span class="agent-metric-value" style="color:var(--teal)">automated</span>
+      </div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-glow amber"></div>
+      <div class="agent-icon amber">🛡️</div>
+      <div class="agent-name">Rocky</div>
+      <div class="agent-role amber">Security & Threat Intelligence</div>
+      <div class="agent-desc">
+        Cybersecurity, threat detection, security sweep, audit automatici. 
+        Protegge l'infrastruttura 24/7.
+      </div>
+      <div class="agent-metric">
+        <span class="agent-metric-label">Port scan engine</span>
+        <span class="agent-metric-value" style="color:var(--amber)">:8765</span>
+      </div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-glow purple"></div>
+      <div class="agent-icon purple">💻</div>
+      <div class="agent-name">Hermes</div>
+      <div class="agent-role purple">Senior Developer & Architect</div>
+      <div class="agent-desc">
+        Sviluppo software, debugging, code review, deploy Vercel, React Native, Python, Node.js. 
+        Scrive, testa e ship codice in autonomia.
+      </div>
+      <div class="agent-metric">
+        <span class="agent-metric-label">Beads issue tracker</span>
+        <span class="agent-metric-value" style="color:var(--purple)">Dolt v2.0.6</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMO LINK -->
+  <section class="demo-section">
+    <h3>Demo Live</h3>
+    <p>Accedi a J.A.R.V.I.S. direttamente dal tunnel Cloudflare</p>
+    <div class="demo-url">patients-mills-source-original.trycloudflare.com</div>
+    <a href="https://patients-mills-source-original.trycloudflare.com/?v=6" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:8px;">
+      Apri Demo →
+    </a>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="pulse"></span> Online · Binario F 2026 · Powered by OpenClaw &bull; Hermes
+  </div>
+</div>
+</body>
+</html>
