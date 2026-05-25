@@ -44,6 +44,7 @@
     line-height: 1.6;
   }
 
+  /* BACKGROUND LAYERS */
   .bg-layer {
     position: fixed; inset:0; z-index:0; pointer-events:none;
   }
@@ -54,18 +55,47 @@
       linear-gradient(90deg, oklch(0.68 0.22 155 / 0.04) 1px, transparent 1px);
     background-size: 72px 72px;
   }
+  .bg-particles {
+    position: fixed; inset:0; z-index:0; pointer-events:none;
+    opacity:0.55;
+  }
   .bg-orb {
     position: fixed; border-radius:50%; filter:blur(140px); z-index:0; pointer-events:none;
-    animation: orbFloat 12s var(--ease-out-expo) infinite;
+    will-change:transform;
   }
-  .bg-orb.a { width:650px; height:650px; background:oklch(0.68 0.22 155 / 0.06); top:-250px; right:-150px; animation-delay:0s; }
-  .bg-orb.b { width:500px; height:500px; background:oklch(0.62 0.12 190 / 0.04); bottom:-200px; left:-100px; animation-delay:-5s; }
+  .bg-orb.a {
+    width:650px; height:650px; background:oklch(0.68 0.22 155 / 0.06);
+    top:-250px; right:-150px;
+    animation: orbFloatA 18s var(--ease-out-expo) infinite;
+  }
+  .bg-orb.b {
+    width:500px; height:500px; background:oklch(0.62 0.12 190 / 0.05);
+    bottom:-200px; left:-100px;
+    animation: orbFloatB 22s var(--ease-out-expo) infinite;
+  }
+  .bg-orb.c {
+    width:400px; height:400px; background:oklch(0.72 0.2 280 / 0.04);
+    top:40%; left:55%;
+    animation: orbFloatC 16s var(--ease-out-expo) infinite;
+  }
 
-  @keyframes orbFloat {
-    0%, 100% { transform: translate(0,0) scale(1); }
-    25% { transform: translate(50px, -60px) scale(1.06); }
-    50% { transform: translate(-30px, 30px) scale(0.94); }
-    75% { transform: translate(60px, 20px) scale(1.03); }
+  @keyframes orbFloatA {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    20% { transform: translate(70px, -80px) scale(1.08); }
+    40% { transform: translate(-40px, 20px) scale(0.93); }
+    60% { transform: translate(80px, 50px) scale(1.05); }
+    80% { transform: translate(-50px, -30px) scale(0.96); }
+  }
+  @keyframes orbFloatB {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-60px, -40px) scale(1.07); }
+    50% { transform: translate(40px, 60px) scale(0.92); }
+    75% { transform: translate(-30px, -70px) scale(1.04); }
+  }
+  @keyframes orbFloatC {
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    33% { transform: translate(50px, -30px) scale(1.05) rotate(1deg); }
+    66% { transform: translate(-40px, 40px) scale(0.95) rotate(-1deg); }
   }
 
   .container { position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:48px 28px; }
@@ -280,6 +310,7 @@
 
   @media (prefers-reduced-motion) {
     .bg-orb, .hero-tag, .hero h1, .hero-sub, .hero-cta, .stats-bar, .agent-row, .demo-section, .footer { animation:none; }
+    .bg-particles { display:none; }
     @keyframes pulseDot { 0%,100%{opacity:1;} }
   }
 
@@ -288,8 +319,10 @@
 </head>
 <body>
 <div class="bg-grid"></div>
+<canvas class="bg-particles" id="particleMesh"></canvas>
 <div class="bg-orb a"></div>
 <div class="bg-orb b"></div>
+<div class="bg-orb c"></div>
 
 <div class="container">
 
@@ -402,5 +435,125 @@
   </div>
 
 </div>
+
+<script>
+(function(){
+  const c = document.getElementById('particleMesh');
+  const ctx = c.getContext('2d');
+  if (!ctx) return;
+
+  let w, h, particles;
+  const PARTICLE_COUNT = 70;
+  const CONNECT_DIST = 120;
+  const CONNECT_DIST_MOUSE = 160;
+  let mouse = { x: -999, y: -999 };
+  let raf;
+
+  function resize() {
+    w = c.width = window.innerWidth;
+    h = c.height = window.innerHeight;
+  }
+
+  function createParticles() {
+    particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: (Math.random() - 0.5) * 0.35,
+        r: Math.random() * 1.5 + 0.6,
+      });
+    }
+  }
+
+  function update() {
+    for (let p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < -20) p.x = w + 20;
+      if (p.x > w + 20) p.x = -20;
+      if (p.y < -20) p.y = h + 20;
+      if (p.y > h + 20) p.y = -20;
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECT_DIST) {
+          const alpha = (1 - dist / CONNECT_DIST) * 0.15;
+          ctx.strokeStyle = `oklch(0.68 0.22 155 / ${alpha})`;
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Mouse connections
+    for (let p of particles) {
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < CONNECT_DIST_MOUSE) {
+        const alpha = (1 - dist / CONNECT_DIST_MOUSE) * 0.2;
+        ctx.strokeStyle = `oklch(0.62 0.12 190 / ${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(mouse.x, mouse.y);
+        ctx.stroke();
+      }
+    }
+
+    // Draw particles
+    for (let p of particles) {
+      ctx.fillStyle = 'oklch(0.68 0.22 155 / 0.55)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'oklch(0.68 0.22 155 / 0.12)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function loop() {
+    update();
+    draw();
+    raf = requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', () => {
+    resize();
+    createParticles();
+  });
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  window.addEventListener('mouseleave', () => {
+    mouse.x = -999;
+    mouse.y = -999;
+  });
+
+  resize();
+  createParticles();
+  raf = requestAnimationFrame(loop);
+})();
+</script>
 </body>
 </html>
